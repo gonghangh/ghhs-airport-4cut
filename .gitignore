@@ -1,0 +1,10 @@
+# Personal photos taken in photobooth
+photos/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log

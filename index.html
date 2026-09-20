@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>인천공항고등학교 공항네컷 · GHHS 4-CUTS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    <link rel="icon" href="assets/ghhs_emblem.png">
+</head>
+<body oncontextmenu="return false;" ondragstart="return false;">
+    <!-- 9:16 Kiosk Header: Incheon Gong-Hang High School Branding -->
+    <header class="airport-header">
+        <div class="header-brand">
+            <img src="assets/ghhs_emblem.png" alt="인천공항고 교표" class="school-logo">
+            <div class="brand-title-wrap">
+                <div class="school-sub">INCHEON GONG-HANG HIGH SCHOOL</div>
+                <div class="brand-title">
+                    인천공항고 <span>공항네컷</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-status">
+            <div class="status-badge" id="badge-printer">
+                <div class="status-dot"></div>
+                <span id="printer-status-text">L8180 준비됨</span>
+            </div>
+            <button class="btn-icon" id="btn-sound-toggle" title="사운드 켜기/끄기">🔊</button>
+            <button class="btn-icon" id="btn-fullscreen-toggle" title="전체화면 전환">⛶</button>
+            <button class="btn-icon" id="btn-settings" title="설정">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Main Screens Container (Optimized for 9:16 Portrait Kiosk) -->
+    <main class="screen-container">
+        <!-- SCREEN 1: Welcome & Standby (Touch anywhere to start) -->
+        <section class="screen active" id="screen-welcome">
+            <div class="welcome-emblem-wrap">
+                <img src="assets/ghhs_emblem.png" alt="인천공항고등학교" class="welcome-emblem-img">
+            </div>
+
+            <div class="fids-board">
+                <div class="fids-header">
+                    <span>FLIGHT</span>
+                    <span>DESTINATION</span>
+                    <span>GATE</span>
+                    <span>STATUS</span>
+                </div>
+                <div class="fids-row">
+                    <span class="highlight">GHHS-2002</span>
+                    <span>우리의 빛나는 청춘 ✈</span>
+                    <span>공항고</span>
+                    <span class="status-blink">● BOARDING</span>
+                </div>
+            </div>
+
+            <h1 class="welcome-title">인천공항고 공항네컷</h1>
+            <p class="welcome-subtitle">설레는 학교 생활의 순간, 친구들과 함께 소중한 추억을 탑승권에 담아보세요!</p>
+
+            <button class="btn-boarding" id="btn-start-checkin">
+                <span>✈️ 화면을 터치하여 탑승 수속 시작</span>
+            </button>
+        </section>
+
+        <!-- SCREEN 2: Layout & Theme Selection -->
+        <section class="screen" id="screen-layout">
+            <div class="section-header">
+                <h2 class="section-title">프레임 디자인 선택</h2>
+                <p class="section-desc">원하는 공항고 프레임과 촬영 옵션을 터치해주세요</p>
+            </div>
+
+            <div class="config-grid">
+                <!-- 1. Theme Selection -->
+                <div>
+                    <div class="option-group-title">
+                        <span>🎨</span> 공항고 시그니처 프레임
+                        <label class="btn-upload-frame" for="input-custom-frame-file" title="새 프레임 추가">
+                            <span>➕ 새 프레임 추가</span>
+                            <input type="file" id="input-custom-frame-file" accept="image/png, image/jpeg" style="display: none;">
+                        </label>
+                    </div>
+                    <div class="cards-grid-2col" id="theme-options">
+                        <!-- 1: 공항네컷 비행기 & 인천대교 -->
+                        <div class="select-card active" data-theme="custom_airport">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_airport.png" alt="공항네컷">
+                            </div>
+                            <div class="card-label">공항네컷 (비행기 & 인천대교)</div>
+                            <div class="card-desc">비행기와 인천대교 4컷</div>
+                        </div>
+
+                        <!-- 2: GHHS FILM 블루 -->
+                        <div class="select-card" data-theme="custom_ghhs_blue">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_ghhs_blue.png" alt="GHHS FILM">
+                            </div>
+                            <div class="card-label">GHHS FILM (스카이블루)</div>
+                            <div class="card-desc">파스텔 블루 2x2 프레임</div>
+                        </div>
+
+                        <!-- 3: GHHS mansion 윤슬 -->
+                        <div class="select-card" data-theme="custom_ghhs_wave">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_ghhs_wave.png" alt="GHHS mansion">
+                            </div>
+                            <div class="card-label">GHHS mansion (윤슬)</div>
+                            <div class="card-desc">바다 물결과 햇살 윤슬 4컷</div>
+                        </div>
+
+                        <!-- 4: GHism 화이트 -->
+                        <div class="select-card" data-theme="custom_ghism_white">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_ghism_white.png" alt="GHism 화이트">
+                            </div>
+                            <div class="card-label">GHism (화이트 필름)</div>
+                            <div class="card-desc">지그재그 4컷 필름 릴 룩</div>
+                        </div>
+
+                        <!-- 5: GHism 블랙 -->
+                        <div class="select-card" data-theme="custom_ghism_black">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_ghism_black.png" alt="GHism 블랙">
+                            </div>
+                            <div class="card-label">GHism (블랙 시크)</div>
+                            <div class="card-desc">시크한 올블랙 4컷 프레임</div>
+                        </div>
+
+                        <!-- 6: 항공 탑승권 스트립 1+1 -->
+                        <div class="select-card" data-theme="boarding_pass">
+                            <div class="card-thumb-wrap" style="display: flex; align-items: center; justify-content: center; font-size: 40px;">
+                                🎫
+                            </div>
+                            <div class="card-label">항공 탑승권 (1+1 스트립)</div>
+                            <div class="card-desc">둘이서 나눠 갖는 2x6 규격</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Countdown Interval Selection -->
+                <div>
+                    <div class="option-group-title">
+                        <span>⏱️</span> 촬영 카운트다운 시간
+                    </div>
+                    <div class="cards-row" id="timer-options">
+                        <div class="select-card active" data-timer="5">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-label">5초</div>
+                            <div class="card-desc">빠른 연속 촬영</div>
+                        </div>
+                        <div class="select-card" data-timer="8">
+                            <div class="card-icon">⌛</div>
+                            <div class="card-label">8초 (추천)</div>
+                            <div class="card-desc">여유로운 포즈 준비</div>
+                        </div>
+                        <div class="select-card" data-timer="10">
+                            <div class="card-icon">🛋️</div>
+                            <div class="card-label">10초</div>
+                            <div class="card-desc">단체 사진 추천</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-action-bar">
+                <button class="btn-back" id="btn-back-to-welcome">← 이전으로</button>
+                <button class="btn-next" id="btn-to-shooting">탑승구로 이동 (촬영 시작) ✈</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Camera & Shooting (9:16 Vertical Screen) -->
+        <section class="screen" id="screen-shooting">
+            <div class="shooting-top-bar">
+                <div class="cuts-badge" id="cuts-indicator">SHOT 1 / 4</div>
+                <div class="shooting-instruction">카메라 렌즈를 바라봐주세요! 📸</div>
+            </div>
+
+            <!-- Big Camera View in upper area -->
+            <div class="camera-main-view">
+                <video id="cam-video" autoplay playsinline muted></video>
+
+                <!-- Countdown Overlay -->
+                <div class="countdown-overlay" id="countdown-overlay">
+                    <div class="countdown-number" id="countdown-text">5</div>
+                </div>
+
+                <!-- Flash Overlay -->
+                <div class="flash-overlay" id="flash-overlay"></div>
+            </div>
+
+            <!-- 4 Shots Preview Thumbnails Bar -->
+            <div class="shots-preview-strip-horizontal">
+                <div class="shot-slot current" id="slot-0"><span>1</span></div>
+                <div class="shot-slot" id="slot-1"><span>2</span></div>
+                <div class="shot-slot" id="slot-2"><span>3</span></div>
+                <div class="shot-slot" id="slot-3"><span>4</span></div>
+            </div>
+
+            <!-- Big Touch Controls for Kiosk -->
+            <div class="shooting-controls-vertical">
+                <button class="btn-shoot-giant" id="btn-trigger-shot">
+                    <span style="font-size: 32px;">📸</span>
+                    <span id="btn-shoot-label">1번째 컷 촬영하기</span>
+                </button>
+                <div class="sub-controls-row">
+                    <button id="btn-retake-last">↺ 직전 컷 다시 찍기</button>
+                    <button id="btn-toggle-mirror">🪞 좌우반전 토글</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Customize & Filter (9:16 Vertical Screen) -->
+        <section class="screen" id="screen-customize">
+            <!-- Canvas Preview Container -->
+            <div class="preview-container-portrait">
+                <canvas id="canvas-preview"></canvas>
+            </div>
+
+            <!-- Bottom Touch Customization Panel -->
+            <div class="customize-panel-portrait">
+                <!-- Filters -->
+                <div>
+                    <div class="panel-section-title">✨ 감성 필터 선택</div>
+                    <div class="filters-grid" id="filter-buttons">
+                        <button class="filter-btn active" data-filter="normal">원본 기본</button>
+                        <button class="filter-btn" data-filter="bright">뽀샤시</button>
+                        <button class="filter-btn" data-filter="mono">흑백 모노</button>
+                        <button class="filter-btn" data-filter="vintage">빈티지 필름</button>
+                        <button class="filter-btn" data-filter="sunset">노을 웜톤</button>
+                        <button class="filter-btn" data-filter="cool">청량 쿨톤</button>
+                    </div>
+                </div>
+
+                <!-- Touch Quick Tags (No physical keyboard required!) -->
+                <div>
+                    <div class="panel-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>✍️ 공항고 문구 선택 (원터치)</span>
+                        <button class="btn-touch-keyboard" id="btn-open-touch-kb">⌨️ 직접 입력</button>
+                    </div>
+                    <div class="quick-tags-container" id="quick-tags">
+                        <button class="tag-btn active" data-name="GHHS 2026" data-dest="인천공항고 ✈ 빛나는 미래">🏫 공항고 2026</button>
+                        <button class="tag-btn" data-name="우정 영원히" data-dest="공항고 ✈ 우리들의 청춘">❤️ 우정 영원히</button>
+                        <button class="tag-btn" data-name="공항고 1학년" data-dest="ICN ✈ 설레는 시작">🌱 1학년</button>
+                        <button class="tag-btn" data-name="공항고 2학년" data-dest="ICN ✈ 추억 가득">☀️ 2학년</button>
+                        <button class="tag-btn" data-name="공항고 3학년" data-dest="ICN ✈ 비상을 향해">🎓 3학년</button>
+                        <button class="tag-btn" data-name="동아리 추억" data-dest="GHHS ✈ DREAMS">🎸 동아리</button>
+                        <button class="tag-btn" data-name="HAPPY TRAVELER" data-dest="SEOUL (ICN) ✈ PARIS">✈️ 여행 감성</button>
+                    </div>
+                    <div class="active-tag-display" id="active-tag-display">
+                        현재 문구: <strong>GHHS 2026 · 인천공항고 ✈ 빛나는 미래</strong>
+                    </div>
+                </div>
+
+                <!-- Stamps Selector -->
+                <div>
+                    <div class="panel-section-title">🏷️ 공항고 스탬프 & 스티커</div>
+                    <div class="stamp-selector" id="stamp-selector">
+                        <button class="stamp-btn" data-icon="🏫" title="공항고">🏫</button>
+                        <button class="stamp-btn" data-icon="✈️" title="비행기">✈️</button>
+                        <button class="stamp-btn" data-icon="🎓" title="졸업">🎓</button>
+                        <button class="stamp-btn" data-icon="❤️" title="하트">❤️</button>
+                        <button class="stamp-btn" data-icon="🎒" title="가방">🎒</button>
+                        <button class="stamp-btn" data-icon="✨" title="반짝이">✨</button>
+                        <button class="stamp-btn" data-icon="🧳" title="캐리어">🧳</button>
+                        <button class="stamp-btn" data-icon="🌴" title="휴양지">🌴</button>
+                    </div>
+                </div>
+
+                <div class="bottom-action-bar" style="margin-top: 10px;">
+                    <button class="btn-back" id="btn-back-to-shooting" style="flex: 1;">↺ 다시 촬영</button>
+                    <button class="btn-next" id="btn-to-print" style="flex: 2; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);">🖨️ 바로 인쇄하기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: Print & Finish (Responsive 9:16 and Wide) -->
+        <section class="screen" id="screen-print">
+            <div class="print-screen-layout">
+                <!-- Large Photo Preview -->
+                <div class="print-preview-side">
+                    <img id="print-final-thumb" alt="완성된 공항고네컷">
+                </div>
+
+                <!-- Print Controls Side -->
+                <div class="print-controls-side">
+                    <div class="print-title-badge">
+                        <span style="font-size: 32px;">🏫</span>
+                        <div>
+                            <h2 class="print-title">인천공항고 공항네컷 완성!</h2>
+                            <p class="print-subtitle">소중한 추억의 탑승권이 완성되었습니다</p>
+                        </div>
+                    </div>
+
+                    <!-- GIANT PRIMARY PRINT BUTTON -->
+                    <button class="btn-print-giant" id="btn-do-print">
+                        <span class="printer-animated-icon">🖨️</span>
+                        <span id="btn-print-label">터치하여 즉시 인쇄하기</span>
+                    </button>
+
+                    <div class="print-meta-box">
+                        <div class="print-printer-info">
+                            <span style="font-size: 22px;">🖨️</span>
+                            <div>
+                                <div style="color: #ffffff; font-weight: 800; font-size: 15px;" id="target-printer-name">EPSON L8180 (온라인)</div>
+                                <div style="font-size: 12px; color: var(--accent-green);">4x6 포토 인화지 출력 준비 완료</div>
+                            </div>
+                        </div>
+
+                        <div class="copies-select-row">
+                            <span style="font-weight: 700; font-size: 15px;">인쇄 매수:</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="filter-btn active" id="copies-1" style="min-width: 65px;">1장</button>
+                                <button class="filter-btn" id="copies-2" style="min-width: 65px;">2장</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="print-sub-actions">
+                        <button class="btn-save-only" id="btn-save-disk">
+                            <span>💾 사진 파일 저장</span>
+                        </button>
+                        <button class="btn-back" id="btn-new-passenger" style="justify-content: center;">
+                            <span>🏠 새 탑승객 (처음으로)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Printing Progress Modal -->
+    <div class="modal-backdrop" id="print-modal">
+        <div class="modal-content">
+            <div class="modal-icon">🖨️</div>
+            <h3 class="modal-title">탑승권 인쇄 중</h3>
+            <p class="modal-desc">
+                EPSON L8180 포토 프린터로 사진을 전송하고 있습니다.<br>
+                잠시 후 배출구에서 인천공항고 공항네컷을 수령하세요!
+            </p>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar" id="modal-progress"></div>
+            </div>
+            <button class="btn-back" id="btn-close-modal" style="display: inline-block; margin-top: 10px; width: 100%;">확인</button>
+        </div>
+    </div>
+
+    <!-- On-Screen Touch Virtual Keyboard Modal -->
+    <div class="modal-backdrop" id="touch-keyboard-modal">
+        <div class="modal-content touch-kb-content">
+            <h3 class="modal-title" style="font-size: 18px; margin-bottom: 12px;">⌨️ 터치 키보드 문구 입력</h3>
+            
+            <div style="margin-bottom: 14px;">
+                <input type="text" class="input-box-giant" id="touch-kb-input" placeholder="문구를 터치하여 입력하세요" readonly>
+            </div>
+
+            <!-- Virtual Keyboard Keys -->
+            <div class="touch-keyboard-grid" id="touch-keyboard-keys">
+                <!-- Generated dynamically by JS -->
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button class="btn-back" id="btn-touch-kb-cancel" style="flex: 1;">취소</button>
+                <button class="btn-next" id="btn-touch-kb-apply" style="flex: 2; justify-content: center;">적용하기 ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settings-modal">
+        <div class="modal-content" style="max-width: 550px; text-align: left;">
+            <h3 class="modal-title" style="text-align: center; margin-bottom: 20px;">⚙️ 공항고네컷 키오스크 설정</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="font-size: 13px; color: var(--accent-sky); font-weight: 700; margin-bottom: 6px; display: block;">카메라 장치 선택</label>
+                    <select class="input-box" id="select-camera-device"></select>
+                </div>
+
+                <div>
+                    <label style="font-size: 13px; color: var(--accent-sky); font-weight: 700; margin-bottom: 6px; display: block;">프린터 장치 선택</label>
+                    <select class="input-box" id="select-printer-device"></select>
+                </div>
+
+                <div>
+                    <label style="font-size: 13px; color: var(--accent-sky); font-weight: 700; margin-bottom: 6px; display: block;">키오스크 모드</label>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-main); font-size: 14px;">
+                        <input type="checkbox" id="check-auto-reset" checked style="width: 18px; height: 18px;">
+                        출력 완료 30초 후 자동으로 첫 화면(대기) 복귀
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-back" id="btn-close-settings" style="width: 100%;">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="js/audio_effects.js"></script>
+    <script src="js/qrcode_generator.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/frame_renderer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
