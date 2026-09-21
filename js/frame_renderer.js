@@ -566,6 +566,127 @@ class AirportFrameRenderer {
         ctx.quadraticCurveTo(x, y, x + radius, y);
         ctx.closePath();
     }
+
+    // A4 1장에 4장 모아찍기 (2x2) 고해상도 300 DPI 캔버스 생성
+    async renderA4Composite(source) {
+        let img = source;
+        if (typeof source === 'string') {
+            img = await this.loadImage(source);
+        }
+
+        const a4Canvas = document.createElement('canvas');
+        a4Canvas.width = 2480;
+        a4Canvas.height = 3508;
+        const ctx = a4Canvas.getContext('2d');
+
+        // 1. 깨끗한 흰색 A4 배경
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 2480, 3508);
+
+        // 2. 4분할 좌표 계산 (1120 x 1680, 2:3 비율 유지)
+        const photoW = 1120;
+        const photoH = 1680;
+        const padX = 60;
+        const padY = 37;
+
+        const positions = [
+            { x: padX, y: padY },                       // 1. 좌상단 (Top-Left)
+            { x: 1240 + padX, y: padY },                // 2. 우상단 (Top-Right)
+            { x: padX, y: 1754 + padY },               // 3. 좌하단 (Bottom-Left)
+            { x: 1240 + padX, y: 1754 + padY }         // 4. 우하단 (Bottom-Right)
+        ];
+
+        for (const pos of positions) {
+            ctx.save();
+            ctx.drawImage(img, 0, 0, img.width, img.height, pos.x, pos.y, photoW, photoH);
+            
+            // 사진 테두리 (아주 연한 외곽선으로 정밀 재단 지원)
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(pos.x, pos.y, photoW, photoH);
+
+            // 코너 크롭 마크
+            this.drawCropMarks(ctx, pos.x, pos.y, photoW, photoH);
+            ctx.restore();
+        }
+
+        // 3. 중앙 십자 절취선 (Dotted Cut Lines)
+        ctx.save();
+        ctx.setLineDash([18, 14]);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2.5;
+
+        // 세로 중심선
+        ctx.beginPath();
+        ctx.moveTo(1240, 0);
+        ctx.lineTo(1240, 3508);
+        ctx.stroke();
+
+        // 가로 중심선
+        ctx.beginPath();
+        ctx.moveTo(0, 1754);
+        ctx.lineTo(2480, 1754);
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. 가위 아이콘 및 안내 문구
+        ctx.save();
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 26px "Pretendard", "Noto Sans KR", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 가장자리 가위 표시
+        ctx.fillText('✂️ 절취선', 1240, 20);
+        ctx.fillText('✂️ 절취선', 1240, 3488);
+        ctx.fillText('✂️', 25, 1754);
+        ctx.fillText('✂️', 2455, 1754);
+        ctx.fillText('✂️', 1240, 1754);
+
+        // 상/하단 공식 브랜딩 여백 텍스트
+        ctx.font = '22px "Pretendard", "Noto Sans KR", sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('✈️ 인천공항고등학교 공항네컷 (GHHS 4-CUTS) · A4 4분할 절취용', 620, 20);
+        ctx.fillText('✈️ 인천공항고등학교 공항네컷 (GHHS 4-CUTS) · A4 4분할 절취용', 1860, 20);
+        ctx.fillText('✂️ 점선을 따라 자르면 4장의 공항네컷이 완성됩니다', 620, 3488);
+        ctx.fillText('✂️ 점선을 따라 자르면 4장의 공항네컷이 완성됩니다', 1860, 3488);
+        ctx.restore();
+
+        return a4Canvas;
+    }
+
+    drawCropMarks(ctx, x, y, w, h) {
+        ctx.save();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        const len = 20;
+
+        // Top-Left
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y); ctx.lineTo(x - 6 - len, y);
+        ctx.moveTo(x, y - 6); ctx.lineTo(x, y - 6 - len);
+        ctx.stroke();
+
+        // Top-Right
+        ctx.beginPath();
+        ctx.moveTo(x + w + 6, y); ctx.lineTo(x + w + 6 + len, y);
+        ctx.moveTo(x + w, y - 6); ctx.lineTo(x + w, y - 6 - len);
+        ctx.stroke();
+
+        // Bottom-Left
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y + h); ctx.lineTo(x - 6 - len, y + h);
+        ctx.moveTo(x, y + h + 6); ctx.lineTo(x, y + h + 6 + len);
+        ctx.stroke();
+
+        // Bottom-Right
+        ctx.beginPath();
+        ctx.moveTo(x + w + 6, y + h); ctx.lineTo(x + w + 6 + len, y + h);
+        ctx.moveTo(x + w, y + h + 6); ctx.lineTo(x + w, y + h + 6 + len);
+        ctx.stroke();
+
+        ctx.restore();
+    }
 }
 
 window.AirportFrameRenderer = AirportFrameRenderer;

@@ -23,6 +23,9 @@ class AirportBoothApp {
         // Rendered Canvas Result
         this.finalCanvas = null;
         this.finalDataUrl = null;
+        this.finalA4Canvas = null;
+        this.finalA4DataUrl = null;
+        this.printPaper = 'a4'; // 기본값: A4 1장에 4장 모아찍기 (여백 절약)
         this.savedSessionFiles = null;
 
         // Printers & Devices
@@ -333,6 +336,24 @@ class AirportBoothApp {
             }, 600);
         });
 
+        // [용지 선택: A4 4장 모아찍기 vs 4x6 전면]
+        const btnPaperA4 = document.getElementById('paper-btn-a4');
+        const btnPaper4x6 = document.getElementById('paper-btn-4x6');
+        if (btnPaperA4 && btnPaper4x6) {
+            btnPaperA4.addEventListener('click', () => {
+                btnPaper4x6.classList.remove('active');
+                btnPaperA4.classList.add('active');
+                this.printPaper = 'a4';
+                this.updatePrintPreview();
+            });
+            btnPaper4x6.addEventListener('click', () => {
+                btnPaperA4.classList.remove('active');
+                btnPaper4x6.classList.add('active');
+                this.printPaper = '4x6';
+                this.updatePrintPreview();
+            });
+        }
+
         // [인쇄 화면] 컨트롤 버튼
         document.getElementById('copies-1').addEventListener('click', (e) => {
             document.getElementById('copies-2').classList.remove('active');
@@ -525,6 +546,14 @@ class AirportBoothApp {
         this.finalCanvas = canvas;
         this.finalDataUrl = canvas.toDataURL('image/png', 0.95);
 
+        // A4 1장에 4장 모아찍기 (2x2) 고해상도 캔버스도 동시 생성
+        try {
+            this.finalA4Canvas = await this.renderer.renderA4Composite(canvas);
+            this.finalA4DataUrl = this.finalA4Canvas.toDataURL('image/png', 0.95);
+        } catch (e) {
+            console.warn('A4 합성 캔버스 생성 실패:', e);
+        }
+
         // UI에 미리보기 표시
         const previewCanvas = document.getElementById('canvas-preview');
         previewCanvas.width = canvas.width;
@@ -535,13 +564,33 @@ class AirportBoothApp {
 
     // 인쇄 화면 준비
     async setupPrintScreen() {
-        const thumb = document.getElementById('print-final-thumb');
-        if (thumb) {
-            thumb.src = this.finalDataUrl;
-        }
+        this.updatePrintPreview();
 
         // 자동으로 로컬 서버에 영구 보관 (사진 보관 폴더)
         await this.autoSaveToBackend();
+    }
+
+    // 인쇄 화면 미리보기 및 UI 라벨 업데이트
+    updatePrintPreview() {
+        const thumb = document.getElementById('print-final-thumb');
+        const statusText = document.getElementById('target-printer-status');
+        const printLabel = document.getElementById('btn-print-label');
+        const guideText = document.getElementById('print-guide-text');
+        const saveDiskLabel = document.getElementById('btn-save-disk-label');
+
+        if (this.printPaper === 'a4') {
+            if (thumb && this.finalA4DataUrl) thumb.src = this.finalA4DataUrl;
+            if (statusText) statusText.textContent = 'A4 1장에 4장 모아찍기 준비 완료';
+            if (printLabel) printLabel.textContent = 'A4 4장 모아찍기 인쇄';
+            if (guideText) guideText.textContent = 'A4 1장에 4장이 인쇄되어 친구들과 1장씩 나누기 좋습니다 ✂️';
+            if (saveDiskLabel) saveDiskLabel.textContent = '💾 A4 파일 저장 (4장 모음)';
+        } else {
+            if (thumb && this.finalDataUrl) thumb.src = this.finalDataUrl;
+            if (statusText) statusText.textContent = '4x6 포토 인화지 출력 준비 완료';
+            if (printLabel) printLabel.textContent = '4x6 포토용지 인쇄';
+            if (guideText) guideText.textContent = '4x6 포토 인화지에 꽉 차게 1장 인쇄됩니다';
+            if (saveDiskLabel) saveDiskLabel.textContent = '💾 사진 파일 저장 (1장)';
+        }
     }
 
     // 서버로 사진 자동 전송 및 저장
@@ -552,6 +601,7 @@ class AirportBoothApp {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mainImage: this.finalDataUrl,
+                    a4Image: this.finalA4DataUrl,
                     cuts: this.capturedCuts
                 })
             });
@@ -565,8 +615,8 @@ class AirportBoothApp {
         }
     }
 
-    // 독립 iframe을 활용한 100% 무결점 4x6 인쇄 엔진
-    printViaIframe(dataUrl) {
+    // 독립 iframe을 활용한 100% 무결점 인쇄 엔진 (A4 4분할 및 4x6 전면 지원)
+    printViaIframe(dataUrl, paperSize = 'a4') {
         return new Promise((resolve) => {
             let iframe = document.getElementById('airport-print-frame');
             if (!iframe) {
@@ -575,12 +625,24 @@ class AirportBoothApp {
                 iframe.style.position = 'fixed';
                 iframe.style.top = '-10000px';
                 iframe.style.left = '-10000px';
-                iframe.style.width = '4in';
-                iframe.style.height = '6in';
                 iframe.style.border = 'none';
                 iframe.style.zIndex = '-1';
                 document.body.appendChild(iframe);
             }
+
+            const isA4 = paperSize === 'a4';
+            iframe.style.width = isA4 ? '210mm' : '4in';
+            iframe.style.height = isA4 ? '297mm' : '6in';
+
+            const pageCss = isA4
+                ? `@page { size: A4 portrait; margin: 0; }
+                   * { margin: 0; padding: 0; box-sizing: border-box; }
+                   html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #ffffff; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                   img { width: 210mm; height: 297mm; display: block; object-fit: contain; }`
+                : `@page { size: 4in 6in; margin: 0; }
+                   * { margin: 0; padding: 0; box-sizing: border-box; }
+                   html, body { width: 4in; height: 6in; margin: 0; padding: 0; background: #ffffff; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                   img { width: 4in; height: 6in; display: block; object-fit: fill; }`;
 
             const doc = iframe.contentWindow.document;
             doc.open();
@@ -591,27 +653,7 @@ class AirportBoothApp {
                     <meta charset="utf-8">
                     <title>인천공항고 공항네컷</title>
                     <style>
-                        @page {
-                            size: 4in 6in;
-                            margin: 0;
-                        }
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        html, body {
-                            width: 4in;
-                            height: 6in;
-                            margin: 0;
-                            padding: 0;
-                            background: #ffffff;
-                            overflow: hidden;
-                            -webkit-print-color-adjust: exact;
-                            print-color-adjust: exact;
-                        }
-                        img {
-                            width: 4in;
-                            height: 6in;
-                            display: block;
-                            object-fit: fill;
-                        }
+                        ${pageCss}
                     </style>
                 </head>
                 <body>
@@ -650,6 +692,9 @@ class AirportBoothApp {
     async executePrint() {
         this.audio.playPrintStart();
 
+        const isA4 = this.printPaper === 'a4';
+        const printDataUrl = (isA4 && this.finalA4DataUrl) ? this.finalA4DataUrl : this.finalDataUrl;
+
         // 1. 프로그레스 모달 표시
         const modal = document.getElementById('print-modal');
         const progressBar = document.getElementById('modal-progress');
@@ -657,30 +702,37 @@ class AirportBoothApp {
         if (progressBar) progressBar.style.width = '30%';
 
         const thumb = document.getElementById('print-final-thumb');
-        if (thumb) thumb.src = this.finalDataUrl;
+        if (thumb) thumb.src = printDataUrl;
 
         if (progressBar) progressBar.style.width = '60%';
 
         // 백엔드 직접 인쇄 호출 (저장된 파일이 있는 경우)
-        if (this.savedSessionFiles && this.savedSessionFiles.mainLocal) {
-            fetch('/api/print', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    filePath: this.savedSessionFiles.mainLocal,
-                    printerName: this.selectedPrinter
-                })
-            }).catch(() => {});
+        if (this.savedSessionFiles) {
+            const targetFilePath = (isA4 && this.savedSessionFiles.a4Local)
+                ? this.savedSessionFiles.a4Local
+                : this.savedSessionFiles.mainLocal;
+
+            if (targetFilePath) {
+                fetch('/api/print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filePath: targetFilePath,
+                        printerName: this.selectedPrinter,
+                        paperSize: this.printPaper
+                    })
+                }).catch(() => {});
+            }
         }
 
         // 2. 독립 iframe을 통해 사진이 100% 확실하게 뜨는 인쇄 다이얼로그 호출!
-        await this.printViaIframe(this.finalDataUrl);
+        await this.printViaIframe(printDataUrl, this.printPaper);
 
         if (progressBar) progressBar.style.width = '100%';
         setTimeout(() => {
             if (modal) modal.style.display = 'none';
             const label = document.getElementById('btn-print-label');
-            if (label) label.textContent = '1장 더 인쇄하기';
+            if (label) label.textContent = isA4 ? 'A4 1장 더 인쇄하기' : '1장 더 인쇄하기';
         }, 1000);
 
         // 키오스크 자동 복귀 타이머 설정 (30초)
@@ -693,10 +745,13 @@ class AirportBoothApp {
     }
 
     downloadImageDirectly() {
-        if (!this.finalDataUrl) return;
+        const isA4 = this.printPaper === 'a4';
+        const targetUrl = (isA4 && this.finalA4DataUrl) ? this.finalA4DataUrl : this.finalDataUrl;
+        if (!targetUrl) return;
+
         const link = document.createElement('a');
-        link.download = `공항네컷_${Date.now()}.png`;
-        link.href = this.finalDataUrl;
+        link.download = isA4 ? `공항네컷_A4_4분할_${Date.now()}.png` : `공항네컷_${Date.now()}.png`;
+        link.href = targetUrl;
         link.click();
     }
 

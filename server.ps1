@@ -116,6 +116,16 @@ while ($listener.IsListening) {
                 $savedFiles["mainLocal"] = $mainFilePath
             }
 
+            # Save A4 4-in-1 composite
+            if ($data.a4Image) {
+                $base64A4 = $data.a4Image -replace '^data:image/[^;]+;base64,', ''
+                $imageBytesA4 = [System.Convert]::FromBase64String($base64A4)
+                $a4FilePath = Join-Path $sessionDir "airport4cut_a4_$timestamp.png"
+                [System.IO.File]::WriteAllBytes($a4FilePath, $imageBytesA4)
+                $savedFiles["a4"] = "/photos/$timestamp/airport4cut_a4_$timestamp.png"
+                $savedFiles["a4Local"] = $a4FilePath
+            }
+
             # Save individual cuts if provided
             if ($data.cuts) {
                 $cutUrls = @()
