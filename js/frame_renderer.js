@@ -70,6 +70,19 @@ class AirportFrameRenderer {
                     { x: 49, y: 502, w: 293, h: 396 },  // 3 (하단 좌)
                     { x: 382, y: 583, w: 293, h: 396 }  // 4 (하단 우 - 스태거드)
                 ]
+            },
+            'custom_ghism_character': {
+                name: 'GHism (귀여운 캐릭터)',
+                maskSrc: 'frames/mask_ghism_character.png',
+                thumbSrc: 'frames/frame_ghism_character.png',
+                origW: 724,
+                origH: 1024,
+                slots: [
+                    { x: 44, y: 61, w: 304, h: 407 },   // 1 (상단 좌)
+                    { x: 377, y: 138, w: 303, h: 407 }, // 2 (상단 우 - 스태거드)
+                    { x: 44, y: 492, w: 304, h: 407 },  // 3 (하단 좌 - 캐릭터 오버레이)
+                    { x: 377, y: 575, w: 303, h: 407 }  // 4 (하단 우 - 스태거드)
+                ]
             }
         };
 
