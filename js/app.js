@@ -97,6 +97,7 @@ class AirportBoothApp {
             this.resetSession();
             this.camera.stopCamera();
         } else if (targetId === 'screen-shooting') {
+            this.syncTargetCuts();
             this.startCameraSession();
         } else if (targetId === 'screen-customize') {
             this.camera.stopCamera();
@@ -180,15 +181,7 @@ class AirportBoothApp {
             card.classList.add('active');
             this.theme = card.dataset.theme;
 
-            // 도요필름은 2컷 와이드, 책톡네컷 등 나머지는 4컷
-            const frameConfig = this.renderer.customFrames[this.theme];
-            if (frameConfig && frameConfig.targetCuts) {
-                this.targetCutsCount = frameConfig.targetCuts;
-            } else if (this.theme === 'custom_doyo') {
-                this.targetCutsCount = 2;
-            } else {
-                this.targetCutsCount = 4;
-            }
+            this.syncTargetCuts();
             this.updateSlotsDisplay();
         });
 
@@ -565,8 +558,21 @@ class AirportBoothApp {
         });
     }
 
+    // 선택된 테마에 따라 컷수(도요필름 2컷 vs 일반 4컷) 완벽 동기화
+    syncTargetCuts() {
+        const frameConfig = this.renderer.customFrames[this.theme];
+        if (frameConfig && frameConfig.targetCuts) {
+            this.targetCutsCount = frameConfig.targetCuts;
+        } else if (this.theme === 'custom_doyo') {
+            this.targetCutsCount = 2;
+        } else {
+            this.targetCutsCount = 4;
+        }
+    }
+
     // 카메라 세션 시작
     async startCameraSession() {
+        this.syncTargetCuts();
         const res = await this.camera.startCamera(this.selectedCameraId);
         if (!res.success) {
             alert('카메라를 열 수 없습니다. 연결 상태를 확인해주세요.');
@@ -673,11 +679,41 @@ class AirportBoothApp {
     }
 
     updateSlotsDisplay() {
+        this.syncTargetCuts();
         const count = this.capturedCuts.length;
         const maxCuts = this.targetCutsCount || 4;
         const cutsBadge = document.getElementById('cuts-indicator');
+        const instruction = document.getElementById('shooting-instruction');
+        const previewStrip = document.querySelector('.shots-preview-strip-horizontal');
+
         if (cutsBadge) {
-            cutsBadge.textContent = `SHOT ${Math.min(count + 1, maxCuts)} / ${maxCuts}`;
+            if (maxCuts === 2) {
+                cutsBadge.textContent = `SHOT ${Math.min(count + 1, maxCuts)} / 2 (도요 2컷 전용)`;
+                cutsBadge.style.background = '#2563eb';
+                cutsBadge.style.color = '#ffffff';
+                cutsBadge.style.border = '2px solid #60a5fa';
+            } else {
+                cutsBadge.textContent = `SHOT ${Math.min(count + 1, maxCuts)} / ${maxCuts}`;
+                cutsBadge.style.background = '';
+                cutsBadge.style.color = '';
+                cutsBadge.style.border = '';
+            }
+        }
+
+        if (instruction) {
+            if (maxCuts === 2) {
+                instruction.textContent = '도요필름 2컷 와이드 촬영 모드입니다! 📸 (화면 터치 시 즉시 촬영)';
+            } else {
+                instruction.textContent = '카메라를 바라봐주세요! (화면 터치 시 즉시 촬영) 📸';
+            }
+        }
+
+        if (previewStrip) {
+            if (maxCuts === 2) {
+                previewStrip.classList.add('mode-2cuts');
+            } else {
+                previewStrip.classList.remove('mode-2cuts');
+            }
         }
 
         for (let i = 0; i < 4; i++) {
@@ -702,7 +738,7 @@ class AirportBoothApp {
         if (count < maxCuts) {
             const curSlot = document.getElementById(`slot-${count}`);
             if (curSlot) curSlot.classList.add('current');
-            if (shootLabel) shootLabel.textContent = `${count + 1}번째 컷 촬영하기`;
+            if (shootLabel) shootLabel.textContent = `${count + 1}번째 컷 촬영하기 (총 ${maxCuts}컷)`;
         } else {
             if (shootLabel) shootLabel.textContent = '완료 (프레임 꾸미기)';
         }
@@ -986,8 +1022,7 @@ class AirportBoothApp {
         this.isCountingDown = false;
         clearInterval(this.countdownTimer);
         clearTimeout(this.autoResetTimer);
-        const frameConfig = this.renderer.customFrames[this.theme];
-        this.targetCutsCount = (frameConfig && frameConfig.targetCuts) ? frameConfig.targetCuts : (this.theme === 'custom_doyo' ? 2 : 4);
+        this.syncTargetCuts();
         this.updateSlotsDisplay();
     }
 }

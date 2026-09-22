@@ -139,6 +139,7 @@
                         <div class="select-card" data-theme="custom_chaektok">
                             <div class="card-thumb-wrap">
                                 <img src="frames/frame_chaektok.png" alt="책톡네컷">
+                                <span style="position: absolute; top: 8px; right: 8px; background: #10b981; color: white; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">📚 4컷</span>
                             </div>
                             <div class="card-label">책톡네컷 (책톡ism)</div>
                             <div class="card-desc">독서 & 즐거운 수다 4컷</div>
@@ -148,15 +149,27 @@
                         <div class="select-card" data-theme="custom_doyo">
                             <div class="card-thumb-wrap">
                                 <img src="frames/frame_doyo.png" alt="도요필름">
+                                <span style="position: absolute; top: 8px; right: 8px; background: #3b82f6; color: white; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); animation: hintPulse 1.2s infinite ease-in-out;">⚡ 2컷 전용</span>
                             </div>
                             <div class="card-label">도요필름 (AI융합교육실)</div>
-                            <div class="card-desc">도요새 마스코트 2컷 와이드</div>
+                            <div class="card-desc">도요새 마스코트 2컷 와이드 (2회 촬영)</div>
                         </div>
 
-                        <!-- 9: 항공 탑승권 스트립 1+1 -->
+                        <!-- 9: GRCism (인천공항고 러닝 크루) -->
+                        <div class="select-card" data-theme="custom_grc">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_grc.png" alt="GRCism">
+                                <span style="position: absolute; top: 8px; right: 8px; background: #0284c7; color: white; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">🏃 4컷</span>
+                            </div>
+                            <div class="card-label">GRCism (러닝 크루)</div>
+                            <div class="card-desc">인천공항고 러닝 4컷 프레임</div>
+                        </div>
+
+                        <!-- 10: 항공 탑승권 스트립 1+1 -->
                         <div class="select-card" data-theme="boarding_pass">
                             <div class="card-thumb-wrap" style="display: flex; align-items: center; justify-content: center; font-size: 40px;">
                                 🎫
+                                <span style="position: absolute; top: 8px; right: 8px; background: #f59e0b; color: white; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">1+1</span>
                             </div>
                             <div class="card-label">항공 탑승권 (1+1 스트립)</div>
                             <div class="card-desc">둘이서 나눠 갖는 2x6 규격</div>
@@ -267,6 +280,7 @@
                     </div>
                     <div class="quick-tags-container" id="quick-tags">
                         <button class="tag-btn active" data-name="GHHS 2026" data-dest="인천공항고 ✈ 빛나는 미래">🏫 공항고 2026</button>
+                        <button class="tag-btn" data-name="GRCism 러닝" data-dest="공항고 GRC ✈ LIVE WITH PURPOSE">🏃 GRC 러닝</button>
                         <button class="tag-btn" data-name="우정 영원히" data-dest="공항고 ✈ 우리들의 청춘">❤️ 우정 영원히</button>
                         <button class="tag-btn" data-name="공항고 1학년" data-dest="ICN ✈ 설레는 시작">🌱 1학년</button>
                         <button class="tag-btn" data-name="공항고 2학년" data-dest="ICN ✈ 추억 가득">☀️ 2학년</button>
@@ -291,6 +305,9 @@
                     <div class="stamp-guide-hint">👆 스티커를 터치하여 선택 후, 사진의 원하는 위치를 터치하면 붙습니다! (드래그로 이동)</div>
                     <div class="stamp-selector" id="stamp-selector">
                         <button class="stamp-btn active" data-icon="🏫" title="공항고">🏫</button>
+                        <button class="stamp-btn" data-icon="🏃" title="러닝">🏃</button>
+                        <button class="stamp-btn" data-icon="👟" title="운동화">👟</button>
+                        <button class="stamp-btn" data-icon="🥇" title="메달">🥇</button>
                         <button class="stamp-btn" data-icon="✈️" title="비행기">✈️</button>
                         <button class="stamp-btn" data-icon="📚" title="책톡">📚</button>
                         <button class="stamp-btn" data-icon="🐥" title="도요새">🐥</button>
@@ -467,10 +484,10 @@
     </div>
 
     <!-- Core Scripts -->
-    <script src="js/audio_effects.js"></script>
-    <script src="js/qrcode_generator.js"></script>
-    <script src="js/camera.js"></script>
-    <script src="js/frame_renderer.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/audio_effects.js?v=20260922_grc"></script>
+    <script src="js/qrcode_generator.js?v=20260922_grc"></script>
+    <script src="js/camera.js?v=20260922_grc"></script>
+    <script src="js/frame_renderer.js?v=20260922_grc"></script>
+    <script src="js/app.js?v=20260922_grc"></script>
 </body>
 </html>

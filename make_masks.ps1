@@ -60,3 +60,10 @@ Create-Mask "frames\frame_ghism_black.png" "frames\mask_ghism_black.png" @(
     @(382, 146, 293, 396),
     @(382, 583, 293, 396)
 )
+
+Create-Mask "frames\frame_grc.png" "frames\mask_grc.png" @(
+    @(46, 63, 300, 403),
+    @(379, 140, 299, 403),
+    @(46, 494, 300, 403),
+    @(379, 566, 299, 403)
+)

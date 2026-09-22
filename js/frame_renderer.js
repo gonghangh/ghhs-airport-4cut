@@ -109,6 +109,20 @@ class AirportFrameRenderer {
                     { x: 26, y: 150, w: 839, h: 456 }, // 1 (상단 와이드 16:9)
                     { x: 26, y: 650, w: 839, h: 456 }  // 2 (하단 와이드 - 도요새 캐릭터 오버레이)
                 ]
+            },
+            'custom_grc': {
+                name: 'GRCism (인천공항고 러닝)',
+                maskSrc: 'frames/mask_grc.png',
+                thumbSrc: 'frames/frame_grc.png',
+                origW: 724,
+                origH: 1024,
+                targetCuts: 4,
+                slots: [
+                    { x: 44, y: 61, w: 304, h: 407 },   // 1 (상단 좌)
+                    { x: 377, y: 138, w: 303, h: 407 }, // 2 (상단 우 - 스태거드)
+                    { x: 44, y: 492, w: 304, h: 407 },  // 3 (하단 좌 - GRC 3D 러닝 로고 오버레이)
+                    { x: 377, y: 564, w: 303, h: 407 }  // 4 (하단 우 - 스태거드)
+                ]
             }
         };
 
