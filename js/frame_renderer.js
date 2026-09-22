@@ -83,6 +83,32 @@ class AirportFrameRenderer {
                     { x: 44, y: 492, w: 304, h: 407 },  // 3 (하단 좌 - 캐릭터 오버레이)
                     { x: 377, y: 575, w: 303, h: 407 }  // 4 (하단 우 - 스태거드)
                 ]
+            },
+            'custom_chaektok': {
+                name: '책톡네컷 (책톡ism)',
+                maskSrc: 'frames/mask_chaektok.png',
+                thumbSrc: 'frames/frame_chaektok.png',
+                origW: 724,
+                origH: 1024,
+                targetCuts: 4,
+                slots: [
+                    { x: 44, y: 61, w: 304, h: 407 },   // 1 (상단 좌)
+                    { x: 377, y: 138, w: 303, h: 407 }, // 2 (상단 우 - 스태거드)
+                    { x: 44, y: 492, w: 304, h: 407 },  // 3 (하단 좌 - 책톡 로고 오버레이)
+                    { x: 377, y: 564, w: 303, h: 407 }  // 4 (하단 우 - 스태거드)
+                ]
+            },
+            'custom_doyo': {
+                name: '도요필름 (AI융합교육실)',
+                maskSrc: 'frames/mask_doyo.png',
+                thumbSrc: 'frames/frame_doyo.png',
+                origW: 891,
+                origH: 1260,
+                targetCuts: 2,
+                slots: [
+                    { x: 26, y: 150, w: 839, h: 456 }, // 1 (상단 와이드 16:9)
+                    { x: 26, y: 650, w: 839, h: 456 }  // 2 (하단 와이드 - 도요새 캐릭터 오버레이)
+                ]
             }
         };
 
@@ -169,7 +195,7 @@ class AirportFrameRenderer {
         ];
 
         // 1. 슬롯 위치에 사용자 사진 먼저 그리기
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < slots.length; i++) {
             if (images[i] && slots[i]) {
                 const s = slots[i];
                 const sx = offsetX + s.x * scale;
@@ -341,7 +367,6 @@ class AirportFrameRenderer {
 
         const footerY = startY + 4 * (photoH + gapY) + 10;
         await this.drawStripFooter(ctx, x, footerY, w, h - footerY, opts);
-        this.drawStamps(ctx, x, y, w, h, opts);
     }
 
     drawThemeBackground(ctx, x, y, w, h, theme) {
@@ -517,6 +542,7 @@ class AirportFrameRenderer {
             } else {
                 ctx.font = `${s.size || 40}px sans-serif`;
                 ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
                 ctx.fillText(s.icon, 0, 0);
             }
             ctx.restore();
@@ -563,7 +589,6 @@ class AirportFrameRenderer {
 
         const footerY = startY + 2 * (photoH + gap) + 20;
         await this.drawStripFooter(ctx, 0, footerY, w, h - footerY, opts);
-        this.drawStamps(ctx, 0, 0, w, h, opts);
     }
 
     roundRect(ctx, x, y, width, height, radius) {

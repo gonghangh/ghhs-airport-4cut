@@ -135,7 +135,25 @@
                             <div class="card-desc">치이카와 & 친구들 4컷</div>
                         </div>
 
-                        <!-- 7: 항공 탑승권 스트립 1+1 -->
+                        <!-- 7: 책톡네컷 (책톡ism) -->
+                        <div class="select-card" data-theme="custom_chaektok">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_chaektok.png" alt="책톡네컷">
+                            </div>
+                            <div class="card-label">책톡네컷 (책톡ism)</div>
+                            <div class="card-desc">독서 & 즐거운 수다 4컷</div>
+                        </div>
+
+                        <!-- 8: 도요필름 (AI융합교육실) -->
+                        <div class="select-card" data-theme="custom_doyo">
+                            <div class="card-thumb-wrap">
+                                <img src="frames/frame_doyo.png" alt="도요필름">
+                            </div>
+                            <div class="card-label">도요필름 (AI융합교육실)</div>
+                            <div class="card-desc">도요새 마스코트 2컷 와이드</div>
+                        </div>
+
+                        <!-- 9: 항공 탑승권 스트립 1+1 -->
                         <div class="select-card" data-theme="boarding_pass">
                             <div class="card-thumb-wrap" style="display: flex; align-items: center; justify-content: center; font-size: 40px;">
                                 🎫
@@ -181,16 +199,17 @@
         <section class="screen" id="screen-shooting">
             <div class="shooting-top-bar">
                 <div class="cuts-badge" id="cuts-indicator">SHOT 1 / 4</div>
-                <div class="shooting-instruction">카메라 렌즈를 바라봐주세요! 📸</div>
+                <div class="shooting-instruction" id="shooting-instruction">카메라를 바라봐주세요! (화면 터치 시 즉시 촬영) 📸</div>
             </div>
 
-            <!-- Big Camera View in upper area -->
-            <div class="camera-main-view">
+            <!-- Big Camera View in upper area (Click/Touch anywhere to shoot immediately!) -->
+            <div class="camera-main-view" id="camera-main-view" title="터치하면 즉시 촬영됩니다!">
                 <video id="cam-video" autoplay playsinline muted></video>
 
-                <!-- Countdown Overlay -->
+                <!-- Countdown Overlay (Click to snap instantly!) -->
                 <div class="countdown-overlay" id="countdown-overlay">
                     <div class="countdown-number" id="countdown-text">5</div>
+                    <div class="countdown-hint">⚡ 화면을 터치하면 즉시 촬영!</div>
                 </div>
 
                 <!-- Flash Overlay -->
@@ -260,18 +279,39 @@
                     </div>
                 </div>
 
-                <!-- Stamps Selector -->
+                <!-- Stamps Selector (Touch canvas to place anywhere!) -->
                 <div>
-                    <div class="panel-section-title">🏷️ 공항고 스탬프 & 스티커</div>
+                    <div class="panel-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>🏷️ 스티커 & 이모지 (원하는 위치에 자유 부착)</span>
+                        <div class="stamp-action-tools">
+                            <button class="btn-stamp-tool" id="btn-undo-stamp" title="마지막 스티커 취소">↩️ 취소</button>
+                            <button class="btn-stamp-tool" id="btn-clear-stamps" title="스티커 전체 삭제">🗑️ 전체삭제</button>
+                        </div>
+                    </div>
+                    <div class="stamp-guide-hint">👆 스티커를 터치하여 선택 후, 사진의 원하는 위치를 터치하면 붙습니다! (드래그로 이동)</div>
                     <div class="stamp-selector" id="stamp-selector">
-                        <button class="stamp-btn" data-icon="🏫" title="공항고">🏫</button>
+                        <button class="stamp-btn active" data-icon="🏫" title="공항고">🏫</button>
                         <button class="stamp-btn" data-icon="✈️" title="비행기">✈️</button>
+                        <button class="stamp-btn" data-icon="📚" title="책톡">📚</button>
+                        <button class="stamp-btn" data-icon="🐥" title="도요새">🐥</button>
+                        <button class="stamp-btn" data-icon="🤖" title="AI">🤖</button>
+                        <button class="stamp-btn" data-icon="🐱" title="치이카와">🐱</button>
+                        <button class="stamp-btn" data-icon="🐰" title="우사기">🐰</button>
                         <button class="stamp-btn" data-icon="🎓" title="졸업">🎓</button>
                         <button class="stamp-btn" data-icon="❤️" title="하트">❤️</button>
-                        <button class="stamp-btn" data-icon="🎒" title="가방">🎒</button>
+                        <button class="stamp-btn" data-icon="💖" title="하트스파클">💖</button>
                         <button class="stamp-btn" data-icon="✨" title="반짝이">✨</button>
+                        <button class="stamp-btn" data-icon="🌟" title="별">🌟</button>
+                        <button class="stamp-btn" data-icon="🎀" title="리본">🎀</button>
                         <button class="stamp-btn" data-icon="🧳" title="캐리어">🧳</button>
-                        <button class="stamp-btn" data-icon="🌴" title="휴양지">🌴</button>
+                        <button class="stamp-btn" data-icon="👑" title="왕관">👑</button>
+                        <button class="stamp-btn" data-icon="🔥" title="열정">🔥</button>
+                    </div>
+                    <div class="stamp-size-selector">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 700;">스티커 크기:</span>
+                        <button class="stamp-size-btn" data-size="45">작게</button>
+                        <button class="stamp-size-btn active" data-size="65">보통</button>
+                        <button class="stamp-size-btn" data-size="95">크게</button>
                     </div>
                 </div>
 

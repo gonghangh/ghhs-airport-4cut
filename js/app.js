@@ -13,6 +13,14 @@ class AirportBoothApp {
         this.copies = 1;
         this.stamps = [];
 
+        // Stamp / Sticker Tool State
+        this.selectedStampIcon = '🏫';
+        this.stampSize = 65;
+        this.isDraggingStamp = false;
+        this.draggedStampIndex = -1;
+        this.dragOffset = { x: 0, y: 0 };
+        this.dragRaf = null;
+
         // Shooting State
         this.capturedCuts = [];
         this.targetCutsCount = 4;
@@ -171,6 +179,17 @@ class AirportBoothApp {
             document.querySelectorAll('#theme-options .select-card').forEach(c => c.classList.remove('active'));
             card.classList.add('active');
             this.theme = card.dataset.theme;
+
+            // 도요필름은 2컷 와이드, 책톡네컷 등 나머지는 4컷
+            const frameConfig = this.renderer.customFrames[this.theme];
+            if (frameConfig && frameConfig.targetCuts) {
+                this.targetCutsCount = frameConfig.targetCuts;
+            } else if (this.theme === 'custom_doyo') {
+                this.targetCutsCount = 2;
+            } else {
+                this.targetCutsCount = 4;
+            }
+            this.updateSlotsDisplay();
         });
 
         // 사용자가 새 프레임 이미지 직접 파일 업로드할 때
@@ -221,9 +240,24 @@ class AirportBoothApp {
             this.switchScreen('screen-shooting');
         });
 
-        // [촬영 화면] 컨트롤 버튼
+        // [촬영 화면] 컨트롤 버튼 및 화면 터치 즉시 촬영
+        const cameraMainView = document.getElementById('camera-main-view');
+        if (cameraMainView) {
+            cameraMainView.addEventListener('click', () => {
+                if (this.isCountingDown) {
+                    this.cancelCountdownAndShootInstantly();
+                } else if (this.capturedCuts.length < this.targetCutsCount) {
+                    this.startCountdownSequence();
+                }
+            });
+        }
+
         document.getElementById('btn-trigger-shot').addEventListener('click', () => {
-            this.startCountdownSequence();
+            if (this.isCountingDown) {
+                this.cancelCountdownAndShootInstantly();
+            } else {
+                this.startCountdownSequence();
+            }
         });
 
         document.getElementById('btn-retake-last').addEventListener('click', () => {
@@ -301,28 +335,139 @@ class AirportBoothApp {
             kbModal.style.display = 'none';
         });
 
-        // 스탬프 토글
+        // 스탬프 팔레트 이모지 선택
         document.querySelectorAll('#stamp-selector .stamp-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-                const icon = btn.dataset.icon;
-                const existingIdx = this.stamps.findIndex(s => s.icon === icon);
-                if (existingIdx >= 0) {
-                    this.stamps.splice(existingIdx, 1);
-                } else {
-                    // 무작위 약간의 회전과 위치
-                    this.stamps.push({
-                        icon,
-                        x: 80 + Math.random() * 400,
-                        y: 300 + Math.random() * 800,
-                        rotate: (Math.random() * 30) - 15,
-                        size: 45
-                    });
-                }
-                this.audio.playStampSound();
-                this.updateCustomizePreview();
+                document.querySelectorAll('#stamp-selector .stamp-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.selectedStampIcon = btn.dataset.icon;
+                this.audio.playTouchBeep();
             });
         });
+
+        // 스탬프 크기 선택 (작게 45px / 보통 65px / 크게 95px)
+        document.querySelectorAll('.stamp-size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.stamp-size-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.stampSize = parseInt(btn.dataset.size, 10) || 65;
+                this.audio.playTouchBeep();
+            });
+        });
+
+        // 스탬프 도구: 취소 (Undo)
+        const btnUndo = document.getElementById('btn-undo-stamp');
+        if (btnUndo) {
+            btnUndo.addEventListener('click', () => {
+                if (this.stamps.length > 0) {
+                    this.stamps.pop();
+                    this.updateCustomizePreview();
+                    this.audio.playTouchBeep();
+                }
+            });
+        }
+
+        // 스탬프 도구: 전체 삭제 (Clear)
+        const btnClear = document.getElementById('btn-clear-stamps');
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                if (this.stamps.length > 0) {
+                    this.stamps = [];
+                    this.updateCustomizePreview();
+                    this.audio.playTouchBeep();
+                }
+            });
+        }
+
+        // 프리뷰 캔버스 터치/클릭: 원하는 위치에 자유 부착 및 드래그 이동
+        const previewCanvas = document.getElementById('canvas-preview');
+        if (previewCanvas) {
+            const getCanvasCoords = (evt) => {
+                const rect = previewCanvas.getBoundingClientRect();
+                const scaleX = previewCanvas.width / rect.width;
+                const scaleY = previewCanvas.height / rect.height;
+                return {
+                    x: (evt.clientX - rect.left) * scaleX,
+                    y: (evt.clientY - rect.top) * scaleY
+                };
+            };
+
+            previewCanvas.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                try { previewCanvas.setPointerCapture(e.pointerId); } catch(err) {}
+                const coords = getCanvasCoords(e);
+
+                // 기존 스탬프를 터치했는지 확인 (최상단 스탬프 우선)
+                let hitIndex = -1;
+                for (let i = this.stamps.length - 1; i >= 0; i--) {
+                    const s = this.stamps[i];
+                    const radius = (s.size || 65) * 0.75;
+                    const dist = Math.hypot(coords.x - s.x, coords.y - s.y);
+                    if (dist <= radius) {
+                        hitIndex = i;
+                        break;
+                    }
+                }
+
+                if (hitIndex >= 0) {
+                    // 기존 스탬프 선택: 최상단으로 옮기고 드래그 시작
+                    const selectedStamp = this.stamps.splice(hitIndex, 1)[0];
+                    this.stamps.push(selectedStamp);
+                    this.isDraggingStamp = true;
+                    this.draggedStampIndex = this.stamps.length - 1;
+                    this.dragOffset = {
+                        x: coords.x - selectedStamp.x,
+                        y: coords.y - selectedStamp.y
+                    };
+                    this.audio.playTouchBeep();
+                    this.updateCustomizePreview(true);
+                } else {
+                    // 빈 공간 터치: 선택된 이모지 새로 생성!
+                    const newStamp = {
+                        icon: this.selectedStampIcon || '🏫',
+                        x: Math.round(coords.x),
+                        y: Math.round(coords.y),
+                        rotate: (Math.random() * 20) - 10,
+                        size: this.stampSize || 65
+                    };
+                    this.stamps.push(newStamp);
+                    this.isDraggingStamp = true;
+                    this.draggedStampIndex = this.stamps.length - 1;
+                    this.dragOffset = { x: 0, y: 0 };
+                    this.audio.playStampSound();
+                    this.updateCustomizePreview(true);
+                }
+            });
+
+            previewCanvas.addEventListener('pointermove', (e) => {
+                if (!this.isDraggingStamp || this.draggedStampIndex < 0) return;
+                e.preventDefault();
+                const coords = getCanvasCoords(e);
+                const s = this.stamps[this.draggedStampIndex];
+                if (!s) return;
+
+                s.x = Math.round(coords.x - this.dragOffset.x);
+                s.y = Math.round(coords.y - this.dragOffset.y);
+
+                if (this.dragRaf) cancelAnimationFrame(this.dragRaf);
+                this.dragRaf = requestAnimationFrame(() => {
+                    this.updateCustomizePreview(true);
+                });
+            });
+
+            const finishDrag = (e) => {
+                if (this.isDraggingStamp) {
+                    this.isDraggingStamp = false;
+                    this.draggedStampIndex = -1;
+                    if (this.dragRaf) cancelAnimationFrame(this.dragRaf);
+                    try { previewCanvas.releasePointerCapture(e.pointerId); } catch(err) {}
+                    this.updateCustomizePreview(false);
+                }
+            };
+
+            previewCanvas.addEventListener('pointerup', finishDrag);
+            previewCanvas.addEventListener('pointercancel', finishDrag);
+        }
 
         document.getElementById('btn-back-to-shooting').addEventListener('click', () => {
             this.switchScreen('screen-shooting');
@@ -408,10 +553,12 @@ class AirportBoothApp {
 
     bindKeyboardShortcuts() {
         window.addEventListener('keydown', (e) => {
-            // Spacebar = 카메라 즉시 촬영
+            // Spacebar = 카메라 촬영 시작 또는 카운트다운 중 즉시 촬영
             if (e.code === 'Space' && this.currentScreen === 'screen-shooting') {
                 e.preventDefault();
-                if (!this.isCountingDown) {
+                if (this.isCountingDown) {
+                    this.cancelCountdownAndShootInstantly();
+                } else if (this.capturedCuts.length < this.targetCutsCount) {
                     this.startCountdownSequence();
                 }
             }
@@ -427,7 +574,16 @@ class AirportBoothApp {
         this.updateSlotsDisplay();
     }
 
-    // 4컷 카운트다운 촬영 시퀀스
+    // 카운트다운 중 화면 터치 시 타이머를 즉시 중단하고 찰칵 촬영
+    cancelCountdownAndShootInstantly() {
+        if (!this.isCountingDown) return;
+        clearInterval(this.countdownTimer);
+        const overlay = document.getElementById('countdown-overlay');
+        if (overlay) overlay.style.display = 'none';
+        this.takeSingleShot();
+    }
+
+    // 카운트다운 촬영 시퀀스
     startCountdownSequence() {
         if (this.isCountingDown) return;
         if (this.capturedCuts.length >= this.targetCutsCount) {
@@ -436,7 +592,10 @@ class AirportBoothApp {
         }
 
         this.isCountingDown = true;
-        document.getElementById('btn-trigger-shot').disabled = true;
+        const shootLabel = document.getElementById('btn-shoot-label');
+        if (shootLabel) {
+            shootLabel.textContent = '⚡ 터치하여 지금 즉시 촬영!';
+        }
 
         let secondsLeft = this.timerSeconds;
         const overlay = document.getElementById('countdown-overlay');
@@ -461,6 +620,11 @@ class AirportBoothApp {
 
     // 단일 컷 캡처
     takeSingleShot() {
+        this.isCountingDown = false;
+        clearInterval(this.countdownTimer);
+        const overlay = document.getElementById('countdown-overlay');
+        if (overlay) overlay.style.display = 'none';
+
         // Flash effect
         const flash = document.getElementById('flash-overlay');
         flash.classList.add('active');
@@ -479,13 +643,12 @@ class AirportBoothApp {
             if (this.capturedCuts.length < this.targetCutsCount) {
                 // 1.5초 후 자동으로 다음 컷 촬영 준비
                 setTimeout(() => {
-                    this.isCountingDown = false;
-                    document.getElementById('btn-trigger-shot').disabled = false;
-                    this.startCountdownSequence();
+                    if (this.currentScreen === 'screen-shooting') {
+                        this.startCountdownSequence();
+                    }
                 }, 1500);
             } else {
-                // 4컷 촬영 완료! 커스텀 화면으로 자동 이동
-                this.isCountingDown = false;
+                // 전 컷 촬영 완료! 커스텀 화면으로 자동 이동
                 setTimeout(() => {
                     this.audio.playAirportChime();
                     this.switchScreen('screen-customize');
@@ -494,26 +657,40 @@ class AirportBoothApp {
         } catch (e) {
             console.error('사진 캡처 실패:', e);
             this.isCountingDown = false;
-            document.getElementById('btn-trigger-shot').disabled = false;
+            this.updateSlotsDisplay();
         }
     }
 
     retakeLastShot() {
         if (this.capturedCuts.length > 0) {
             this.capturedCuts.pop();
-            this.updateSlotsDisplay();
             this.isCountingDown = false;
-            document.getElementById('btn-trigger-shot').disabled = false;
+            clearInterval(this.countdownTimer);
+            const overlay = document.getElementById('countdown-overlay');
+            if (overlay) overlay.style.display = 'none';
+            this.updateSlotsDisplay();
         }
     }
 
     updateSlotsDisplay() {
         const count = this.capturedCuts.length;
-        document.getElementById('cuts-indicator').textContent = `SHOT ${Math.min(count + 1, 4)} / 4`;
+        const maxCuts = this.targetCutsCount || 4;
+        const cutsBadge = document.getElementById('cuts-indicator');
+        if (cutsBadge) {
+            cutsBadge.textContent = `SHOT ${Math.min(count + 1, maxCuts)} / ${maxCuts}`;
+        }
 
         for (let i = 0; i < 4; i++) {
             const slot = document.getElementById(`slot-${i}`);
+            if (!slot) continue;
+
+            if (i >= maxCuts) {
+                slot.style.display = 'none';
+                continue;
+            }
+            slot.style.display = 'flex';
             slot.classList.remove('current');
+
             if (i < count) {
                 slot.innerHTML = `<img src="${this.capturedCuts[i]}" alt="컷 ${i + 1}">`;
             } else {
@@ -521,16 +698,18 @@ class AirportBoothApp {
             }
         }
 
-        if (count < 4) {
-            document.getElementById(`slot-${count}`).classList.add('current');
-            document.getElementById('btn-shoot-label').textContent = `${count + 1}번째 컷 촬영`;
+        const shootLabel = document.getElementById('btn-shoot-label');
+        if (count < maxCuts) {
+            const curSlot = document.getElementById(`slot-${count}`);
+            if (curSlot) curSlot.classList.add('current');
+            if (shootLabel) shootLabel.textContent = `${count + 1}번째 컷 촬영하기`;
         } else {
-            document.getElementById('btn-shoot-label').textContent = '완료 (프레임 꾸미기)';
+            if (shootLabel) shootLabel.textContent = '완료 (프레임 꾸미기)';
         }
     }
 
-    // 커스텀 프리뷰 Canvas 렌더링
-    async updateCustomizePreview() {
+    // 커스텀 프리뷰 Canvas 렌더링 (skipA4가 true이면 스티커 드래그 중 초고속 렌더링 유지)
+    async updateCustomizePreview(skipA4 = false) {
         if (this.capturedCuts.length === 0) return;
 
         const canvas = await this.renderer.render(this.capturedCuts, {
@@ -546,20 +725,26 @@ class AirportBoothApp {
         this.finalCanvas = canvas;
         this.finalDataUrl = canvas.toDataURL('image/png', 0.95);
 
-        // A4 1장에 4장 모아찍기 (2x2) 고해상도 캔버스도 동시 생성
-        try {
-            this.finalA4Canvas = await this.renderer.renderA4Composite(canvas);
-            this.finalA4DataUrl = this.finalA4Canvas.toDataURL('image/png', 0.95);
-        } catch (e) {
-            console.warn('A4 합성 캔버스 생성 실패:', e);
-        }
-
         // UI에 미리보기 표시
         const previewCanvas = document.getElementById('canvas-preview');
-        previewCanvas.width = canvas.width;
-        previewCanvas.height = canvas.height;
-        const pCtx = previewCanvas.getContext('2d');
-        pCtx.drawImage(canvas, 0, 0);
+        if (previewCanvas) {
+            if (previewCanvas.width !== canvas.width || previewCanvas.height !== canvas.height) {
+                previewCanvas.width = canvas.width;
+                previewCanvas.height = canvas.height;
+            }
+            const pCtx = previewCanvas.getContext('2d');
+            pCtx.drawImage(canvas, 0, 0);
+        }
+
+        // A4 1장에 4장 모아찍기 (2x2) 고해상도 캔버스 동시 생성
+        if (!skipA4) {
+            try {
+                this.finalA4Canvas = await this.renderer.renderA4Composite(canvas);
+                this.finalA4DataUrl = this.finalA4Canvas.toDataURL('image/png', 0.95);
+            } catch (e) {
+                console.warn('A4 합성 캔버스 생성 실패:', e);
+            }
+        }
     }
 
     // 인쇄 화면 준비
@@ -801,6 +986,8 @@ class AirportBoothApp {
         this.isCountingDown = false;
         clearInterval(this.countdownTimer);
         clearTimeout(this.autoResetTimer);
+        const frameConfig = this.renderer.customFrames[this.theme];
+        this.targetCutsCount = (frameConfig && frameConfig.targetCuts) ? frameConfig.targetCuts : (this.theme === 'custom_doyo' ? 2 : 4);
         this.updateSlotsDisplay();
     }
 }
